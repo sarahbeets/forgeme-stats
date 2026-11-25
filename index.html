@@ -285,14 +285,17 @@ details.data th,details.data td{padding:7px 10px}
 .theme td.title a:hover{color:var(--net-ink);background-image:linear-gradient(var(--net),var(--net))}
 .theme tr.self td{background:var(--net-soft)}
 .net-tiktok .tag{box-shadow:-2px -2px 0 #25F4EE,2px 2px 0 #FE2C55}
+.plat-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;background:var(--net-bg);color:#fff;border-radius:var(--radius-sm);padding:18px 24px;margin:30px 0 14px;position:relative;overflow:hidden}
+.plat-head::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);right:-50px;top:-90px}
+.plat-head .plat-name{font-size:clamp(24px,3.2vw,32px);font-weight:900;letter-spacing:-.035em;line-height:1}
+.plat-head .plat-title{font-size:15px;font-weight:600;opacity:.95}
+.plat-head .ast{color:rgba(255,255,255,.8)}
+.net-tiktok .plat-head .plat-name{text-shadow:-2px -1px 0 #25F4EE,2px 1px 0 #FE2C55}
 .ov{background:linear-gradient(var(--net,var(--rose)),var(--net,var(--rose))) top/100% 4px no-repeat,var(--white)}
-.ov.ov-pub{background:linear-gradient(90deg,#0866FF 0 50%,#FE2C55 50% 100%) top/100% 4px no-repeat,var(--white)}
-.sec-pub>.net-banner{background:radial-gradient(40% 90% at 100% 0%,rgba(254,44,85,.42) 0%,rgba(254,44,85,0) 70%),radial-gradient(34% 80% at 90% 100%,rgba(37,244,238,.26) 0%,rgba(37,244,238,0) 70%),linear-gradient(110deg,#0064E0 0%,#0A50CC 40%,#111827 74%,#121212 100%)}
 .ndot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--net,var(--rose));margin-right:7px;vertical-align:0;flex:none}
-.ndot.duo{background:linear-gradient(90deg,#0866FF 50%,#FE2C55 50%)}
 .sm .net,.chart-head h4{display:flex;align-items:center}
 .nav a[data-sec="facebook"]::before,.nav a[data-sec="instagram"]::before,.nav a[data-sec="publicite"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px}
-.nav a[data-sec="publicite"]::before{background:linear-gradient(90deg,#0866FF 50%,#FE2C55 50%)}
+.nav a[data-sec="publicite"]::before{background:linear-gradient(135deg,#E31E50,#FF6A4D)}
 .nav a[data-sec="facebook"]::before{background:#1877F2}
 .nav a[data-sec="instagram"]::before{background:#C13584}
 .nav a[data-sec="facebook"][aria-current="true"]{background:#E8F1FE;color:#1468D8}
@@ -379,7 +382,7 @@ footer .mascotte{width:clamp(120px,17vw,200px);height:auto;filter:drop-shadow(0 
 </div>
 <div id="tip" role="status" hidden></div>
 
-<script id="payload" type="application/json">{"v": 1, "salt": "tEn+ipTtn0vb5W3A1iPxug==", "iter": 600000, "iv": "sttMRsoA7A6xJw5M", "ct": "ApddHRTuTb2ZO/qXzeYSnH/O8S1X8InxLVBi7hvKUeXJrJ2jD5JKOU12WAPwNzZW18yBL6innqgS2juRNVN99l9nmOMC6GNC045HS9G+quBquI+EG3am78VRQe0P53wWBhALc39pJ38JxWVB3YS5mUFcBZxac0WSrailLgTyHu5fmttk8ZiCQMEo/9BoKWGhKPkuEL8fgSNxcfTjRotST9HaPljLZXgs3vAU+DdjcAHk8lXTQYvd+bJOEno3pQ=="}</script>
+<script id="payload" type="application/json">{"v": 1, "salt": "tEn+ipTtn0vb5W3A1iPxug==", "iter": 600000, "iv": "BGmiUTFpDDYgvsai", "ct": "IkB2gZ96WGKKRAffqqJLKtK52cQ1M6xpyaIokC6QRx+qu8sUQ+DCbQFPGNARyQoTZ5smottMyt2xxvtIrpb5VtNRyJNE/iWlhpo04x9lpUCQeMybXgAZbVFx6UzAf8ShwjeUKGrDRv4bcDfYLgC1miJn37QOzFd/GXZjvYySlO/LpxGRF17PBFZVMU29E4FgINlqmYE7lxU8TK4TPEn2mjgfL5qOOwic59DI06MeWvZIhFb6MN+SD9GMh7COfg=="}</script>
 <script>
 (function(){
 "use strict";
@@ -706,8 +709,8 @@ function tipRow(color,label,value){return h("div",{class:"tr"},color?h("i",{clas
    et redessinés quand la fenêtre change de taille. */
 var COUL={rose:"#E31E50",past:"#F8C1CA",cross:"#DCCFC9"};
 /* Couleur de chaque réseau dans les graphiques : [mois affiché, mois précédents] */
-var NETCOL={facebook:["#1877F2","#C5DBFB"],instagram:["#C13584","#EFC9DD"],meta:["#0866FF","#B9D3FF"],tiktok:["#FE2C55","#FFC2CE"]};
-function ndot(net){return h("i",{class:"ndot"+(net==="pub"?" duo":""),"aria-hidden":"true"});}
+var NETCOL={facebook:["#1877F2","#C5DBFB"],instagram:["#C13584","#EFC9DD"],meta:["#0866FF","#B9D3FF"],tiktok:["#00A6A0","#B3E6E3"]};
+function ndot(net){return h("i",{class:"ndot","aria-hidden":"true"});}
 var CHARTS=[];
 function chartBox(draw){var box=h("div",{class:"chart"});CHARTS.push({box:box,draw:draw,w:0});return box;}
 function drawCharts(force){
@@ -977,7 +980,7 @@ function secInstagram(m,prevM){
 function pubPlateforme(parent,m,prevM,key,nom){
   var a=m.ads[key];if(!a)return;
   var sec=h("div",{class:"theme net-"+key});parent.appendChild(sec);
-  sec.appendChild(blockHead(nom,a.title||"Diffusion, résultats et coûts"));
+  sec.appendChild(h("div",{class:"plat-head"},h("span",{class:"plat-name",text:nom}),h("span",{class:"plat-title"},rich(a.title||"Diffusion, résultats et coûts"))));
   var chiffres=0;
   [["impressions","reach","frequency","spend"],
    ["results","costPerResult","installs","costPerInstall","conversions","clicks","linkClicks"],
