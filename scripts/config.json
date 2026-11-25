@@ -1,0 +1,238 @@
+{
+  "site": {
+    "iterations": 600000,
+    "salt": "tEn+ipTtn0vb5W3A1iPxug=="
+  },
+  "metricool": {
+    "brandId": "7624968",
+    "marque": "FORGE ME",
+    "fuseau": "Europe/Paris",
+    "requetes": {
+      "facebook": {
+        "metrics": [
+          "FBEV17",
+          "FBEV47",
+          "FBEV48",
+          "FBEV04",
+          "FBEV21",
+          "FBEV35",
+          "FBEV49",
+          "FBEV03",
+          "FBEV18",
+          "FBEV19",
+          "FBEV34",
+          "FBEV16",
+          "FBEV13",
+          "FBEV14",
+          "FBEV15"
+        ]
+      },
+      "instagram": {
+        "metrics": [
+          "IGEV01",
+          "IGEV43",
+          "IGEV44",
+          "IGEV04",
+          "IGEV22",
+          "IGEV16",
+          "IGEV05",
+          "IGEV19",
+          "IGEV20",
+          "IGEV21",
+          "IGEV09",
+          "IGEV13",
+          "IGEV14",
+          "IGEV40",
+          "IGEV15",
+          "IGEV23",
+          "IGEV30"
+        ]
+      },
+      "instagram_plus": {
+        "metrics": [
+          "IGEV06",
+          "IGEV17",
+          "IGEV18",
+          "IGEV25",
+          "IGEV26",
+          "IGEV27",
+          "IGEV28",
+          "IGEV29",
+          "IGEV31",
+          "IGEV37",
+          "IGEV38",
+          "IGEV39",
+          "IGEV42",
+          "IGEV02"
+        ]
+      },
+      "posts_facebook": {
+        "metrics": [
+          "FBPO01",
+          "FBPO03",
+          "FBPO06",
+          "FBPO07",
+          "FBPO12",
+          "FBPO13",
+          "FBPO08",
+          "FBPO14",
+          "FBPO23",
+          "FBPO10"
+        ]
+      },
+      "reels_facebook": {
+        "metrics": [
+          "FBRE01",
+          "FBRE05",
+          "FBRE06",
+          "FBRE10",
+          "FBRE11",
+          "FBRE08",
+          "FBRE07",
+          "FBRE09",
+          "FBRE13"
+        ]
+      },
+      "posts_instagram": {
+        "metrics": [
+          "IGPO01",
+          "IGPO03",
+          "IGPO06",
+          "IGPO07",
+          "IGPO28",
+          "IGPO14",
+          "IGPO10",
+          "IGPO12",
+          "IGPO13",
+          "IGPO08",
+          "IGPO27",
+          "IGPO15"
+        ]
+      },
+      "reels_instagram": {
+        "metrics": [
+          "IGRE01",
+          "IGRE03",
+          "IGRE06",
+          "IGRE23",
+          "IGRE11",
+          "IGRE08",
+          "IGRE09",
+          "IGRE10"
+        ]
+      },
+      "stories_instagram": {
+        "metrics": [
+          "IGST01",
+          "IGST03",
+          "IGST06",
+          "IGST07",
+          "IGST09",
+          "IGST10",
+          "IGST11",
+          "IGST13",
+          "IGST08"
+        ]
+      },
+      "publicite": {
+        "metrics": [
+          "FAEV01",
+          "FAEV03",
+          "FAEV04",
+          "FAEV05",
+          "KAEV01",
+          "KAEV02",
+          "KAEV03",
+          "KAEV04"
+        ]
+      },
+      "campagnes_meta": {
+        "metrics": [
+          "FACA05",
+          "FACA07",
+          "FACA10",
+          "FACA12",
+          "FACA13",
+          "FACA14",
+          "FACA44",
+          "FACA79",
+          "FACA156",
+          "FACA157",
+          "FACA151",
+          "FACA149"
+        ]
+      },
+      "campagnes_tiktok": {
+        "metrics": [
+          "KADC02",
+          "KADC03",
+          "KADC06",
+          "KADC07",
+          "KADC08",
+          "KADC13",
+          "KADC14",
+          "KADC15",
+          "KADC16",
+          "KADC21",
+          "KADC23",
+          "KADC27"
+        ]
+      },
+      "audience_facebook_pays": {
+        "metrics": [
+          "FBDP03",
+          "FBDP04"
+        ]
+      },
+      "audience_facebook_villes": {
+        "metrics": [
+          "FBDC03",
+          "FBDC04"
+        ]
+      },
+      "audience_instagram_pays": {
+        "metrics": [
+          "IGDP01",
+          "IGDP02"
+        ]
+      },
+      "audience_instagram_villes": {
+        "metrics": [
+          "IGDC01",
+          "IGDC02"
+        ]
+      },
+      "concurrents_facebook": {
+        "metrics": [
+          "FBCO13",
+          "FBCO06",
+          "FBCO07",
+          "FBCO08",
+          "FBCO10"
+        ]
+      },
+      "concurrents_instagram": {
+        "metrics": [
+          "IGCO02",
+          "IGCO03",
+          "IGCO07",
+          "IGCO08",
+          "IGCO12",
+          "IGCO10"
+        ]
+      },
+      "hashtags_instagram": {
+        "metrics": [
+          "IGHT01",
+          "IGHT03",
+          "IGHT06",
+          "IGHT04"
+        ]
+      }
+    },
+    "concurrents": {
+      "facebook": [],
+      "instagram": []
+    }
+  }
+}
