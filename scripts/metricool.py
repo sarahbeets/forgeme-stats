@@ -14,8 +14,13 @@
       jour, classements de posts, reels et campagnes, et textes marqués « À RÉDIGER ».
       Si FM_MOT_DE_PASSE est défini, affiche aussi la comparaison avec le mois précédent.
 
-Les chiffres publicitaires plus détaillés relevés dans les gestionnaires de publicités
-(installations, résultats, répétition...) s'ajoutent ensuite à la main dans le fichier du mois.
+  actualiser AAAA-MM --brut DOSSIER --sortie FICHIER.json [--jusqu-au AAAA-MM-JJ]
+      Pour un mois déjà rédigé : reprend les chiffres frais de DOSSIER (organique et publicité),
+      garde les textes et les titres déjà écrits, et liste ce qui a changé pour mettre les textes
+      à jour. Demande FM_MOT_DE_PASSE.
+
+Les installations, résultats et vues vidéo de la publicité viennent des campagnes Metricool.
+Les chiffres relevés à la main dans les gestionnaires de publicités peuvent compléter le fichier du mois.
 """
 import argparse
 import calendar
@@ -103,6 +108,15 @@ def titre_par_defaut(texte, limite=70):
 def date_iso(v):
     v = str(v)
     return "%s-%s-%s" % (v[0:4], v[4:6], v[6:8]) if len(v) >= 8 and v[:8].isdigit() else v
+
+
+MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre",
+           "novembre", "décembre"]
+
+
+def jour_mois(iso):
+    an, m, j = iso.split("-")
+    return "%s %s" % ("1er" if j == "01" else str(int(j)), MOIS_FR[int(m) - 1])
 
 
 def kpis_facebook(lignes, met):
@@ -380,24 +394,50 @@ def preparer(mois, dossier: Path, jusqua=None):
         if jour:
             sortie["facebook"]["daily"] = jour
         posts = charger(dossier, "posts_facebook", conf["posts_facebook"]["metrics"])
+        champs_posts = ["date", "texte", "url", "type", "reach", "reactions", "comments", "shares", "clicks", "engagement",
+                        "impressions"]
+        reels_sans_texte = []
+        if posts and config()["metricool"].get("facebook_videos_sans_texte_en_reels"):
+            # Vérifié dans Meta Business Suite le 25 novembre 2026 : les « posts » vidéo sans légende que
+            # Metricool remonte pour la page ForgeMe sont en réalité des reels.
+            garder = []
+            for l in posts:
+                r = dict(zip(champs_posts, l))
+                if str(r.get("type") or "").lower() == "video" and not str(r.get("texte") or "").strip():
+                    reels_sans_texte.append(r)
+                else:
+                    garder.append(l)
+            posts = garder
+            if reels_sans_texte:
+                k = sortie["facebook"]["kpi"]
+                k["reels"] = (k.get("reels") or 0) + len(reels_sans_texte)
+                k["posts"] = max((k.get("posts") or 0) - len(reels_sans_texte), 0)
+        if sortie["facebook"]["kpi"].get("posts") == 0:
+            # sans post du fil, l'engagement et la portée moyenne « par post » n'ont pas de sens
+            for cle in ("engagement", "avgReachPerPost"):
+                sortie["facebook"]["kpi"].pop(cle, None)
         if posts:
             def tf(r):
                 return {"date": date_iso(r["date"]), "title": titre_par_defaut(r["texte"]) or A_REDIGER, "texte": r["texte"],
                         "url": r["url"], "reach": entier(r["reach"]), "reactions": entier(r["reactions"]),
                         "comments": entier(r["comments"]), "shares": entier(r["shares"]),
                         "clicks": entier(r["clicks"]), "engagement": arrondi(r["engagement"])}
-            t = table_posts(
-                posts, ["date", "texte", "url", "type", "reach", "reactions", "comments", "shares", "clicks", "engagement"],
-                "engagement", ["reach", "reactions", "comments", "shares", "clicks", "engagement"], 5, tf)
+            t = table_posts(posts, champs_posts, "engagement",
+                            ["reach", "reactions", "comments", "shares", "clicks", "engagement"], 5, tf)
             if t["rows"]:
                 sortie["facebook"]["posts"] = t
-        reels = charger(dossier, "reels_facebook", conf["reels_facebook"]["metrics"])
-        if reels:
+        reels = charger(dossier, "reels_facebook", conf["reels_facebook"]["metrics"]) or []
+        if reels or reels_sans_texte:
             def trf(r):
                 return {"date": date_iso(r["date"]), "title": titre_par_defaut(r["texte"]), "texte": r["texte"],
                         "url": r["url"], "views": entier(r["views"]), "likes": entier(r["likes"])}
             t = table_posts(reels, ["date", "texte", "url", "views", "reach", "likes", "actions", "engagement", "tempsMoyen"],
-                            "views", ["views", "likes"], 6, trf)
+                            "views", ["views", "likes"], 8, trf)
+            for r in reels_sans_texte:
+                d = date_iso(r["date"])
+                t["rows"].append({"date": d, "title": "Reel du %s, sans légende" % jour_mois(d), "url": r["url"],
+                                  "views": entier(num(r.get("impressions"))), "likes": entier(num(r.get("reactions")))})
+            t["rows"].sort(key=lambda x: (-(x.get("views") or 0), x["date"]))
             if t["rows"]:
                 sortie["facebook"]["reels"] = t
 
@@ -466,6 +506,11 @@ def preparer(mois, dossier: Path, jusqua=None):
                             ["impressions", "reach", "frequency", "results", "costPerResult", "installs", "clicks", "cpm", "spend"], 6, tm)
             if t["rows"]:
                 sortie["ads"]["meta"]["campaigns"] = t
+            totaux_campagnes(sortie["ads"]["meta"]["kpi"], cm,
+                             ["name", "objective", "impressions", "reach", "spend", "clicks", "linkClicks", "installs",
+                              "results", "resultLabel", "frequency", "thruPlays"],
+                             ("linkClicks", "installs", "results", "thruPlays"))
+            simplifier_resultats(sortie["ads"]["meta"], objectif_app(cm, 1))
         ct = charger(dossier, "campagnes_tiktok", conf["campagnes_tiktok"]["metrics"])
         if ct and tiktok:
             def tt(r):
@@ -482,10 +527,167 @@ def preparer(mois, dossier: Path, jusqua=None):
                             ["impressions", "clicks", "results", "costPerResult", "cpc", "ctr", "spend"], 6, tt)
             if t["rows"]:
                 sortie["ads"]["tiktok"]["campaigns"] = t
+            totaux_campagnes(sortie["ads"]["tiktok"]["kpi"], ct,
+                             ["name", "objective", "impressions", "clicks", "conversions", "spend", "results", "frequency",
+                              "videoViews", "views6s", "profileVisits", "follows"],
+                             ("results", "videoViews", "views6s", "profileVisits", "follows"))
+            simplifier_resultats(sortie["ads"]["tiktok"], objectif_app(ct, 1))
 
     blocs_complementaires(dossier, sortie)
     sortie["takeaways"] = {"wins": [A_REDIGER], "priorities": [A_REDIGER]}
     return sortie
+
+
+def totaux_campagnes(kpi, lignes, champs, cles):
+    """Additionne sur toutes les campagnes les indicateurs absents de l'évolution (installations, résultats, vidéo)."""
+    somme = {}
+    for l in lignes or []:
+        r = dict(zip(champs, l))
+        for c in cles:
+            v = num(r.get(c))
+            if v is not None:
+                somme[c] = somme.get(c, 0) + v
+    for c, v in somme.items():
+        if v:
+            kpi[c] = entier(v)
+    dep = kpi.get("spend") or 0
+    if kpi.get("installs"):
+        kpi["costPerInstall"] = round(dep / kpi["installs"], 2)
+    if kpi.get("results"):
+        kpi["costPerResult"] = round(dep / kpi["results"], 2)
+
+
+def objectif_app(lignes, col):
+    """Vrai si toutes les campagnes ont un objectif d'installation d'application."""
+    objs = [str(l[col] or "").upper() for l in lignes or [] if len(l) > col]
+    return bool(objs) and all("APP" in o for o in objs)
+
+
+def simplifier_resultats(plat, app):
+    """Pour des campagnes d'installation, les « résultats » sont les installations : on n'affiche qu'une fois."""
+    k = plat.get("kpi") or {}
+    if app and k.get("results") is not None and k.get("installs") is None:
+        k["installs"] = k["results"]
+        if k.get("costPerResult") is not None:
+            k["costPerInstall"] = k["costPerResult"]
+    if k.get("installs") is not None and k.get("conversions") == k.get("installs"):
+        k.pop("conversions", None)
+    if k.get("installs") is not None and k.get("results") in (None, k.get("installs")):
+        k.pop("results", None)
+        k.pop("costPerResult", None)
+        camp = plat.get("campaigns")
+        if camp:
+            for r in camp["rows"]:
+                if r.get("installs") is None:
+                    r["installs"] = r.get("results")
+                r.pop("results", None)
+                r.pop("costPerResult", None)
+                if r.get("installs") and r.get("spend") is not None:
+                    r["costPerInstall"] = round(r["spend"] / r["installs"], 2)
+            cols = [c for c in camp["columns"] if c not in ("results", "costPerResult", "installs", "costPerInstall")]
+            camp["columns"] = cols[:-1] + ["installs", "costPerInstall"] + cols[-1:]
+
+
+def fusion_table(ancienne, nouvelle):
+    """Nouvelle table de publications en gardant les titres déjà rédigés (même lien, sinon même date)."""
+    if not ancienne or not ancienne.get("rows"):
+        return nouvelle
+    par_url = {r.get("url"): r for r in ancienne["rows"] if r.get("url")}
+    par_date = {}
+    for r in ancienne["rows"]:
+        par_date.setdefault(r.get("date"), []).append(r)
+    for r in nouvelle.get("rows", []):
+        vieux = par_url.get(r.get("url"))
+        if vieux is None and len(par_date.get(r.get("date"), [])) == 1 and not par_date[r.get("date")][0].get("url"):
+            vieux = par_date[r.get("date")][0]
+        if vieux and vieux.get("title"):
+            r["title"] = vieux["title"]
+            if not r.get("url") and vieux.get("url"):
+                r["url"] = vieux["url"]
+        elif r.get("url") or r.get("date"):
+            r["nouveau"] = True
+    return nouvelle
+
+
+def actualiser(mois, dossier: Path, jusqua=None):
+    """Remet à jour les chiffres d'un mois déjà rédigé sans toucher aux textes ni aux titres déjà écrits.
+
+    Renvoie le mois actualisé et la liste des changements à reprendre dans les textes."""
+    import copy
+    from commun import lire_donnees
+    donnees = lire_donnees()
+    ancien = next((m for m in donnees["months"] if m["id"] == mois), None)
+    if ancien is None:
+        sys.exit("Le mois %s n'existe pas encore : utilise preparer." % mois)
+    neuf = preparer(mois, dossier, jusqua)
+    out = copy.deepcopy(ancien)
+    an, m = (int(x) for x in mois.split("-"))
+    if jusqua and int(jusqua.split("-")[2]) < calendar.monthrange(an, m)[1]:
+        out["until"] = jusqua
+    else:
+        out.pop("until", None)
+        out.pop("untilNote", None)
+    for res in ("facebook", "instagram"):
+        if res not in neuf:
+            continue
+        o = out.setdefault(res, {"analysis": A_REDIGER})
+        o["kpi"] = neuf[res]["kpi"]
+        if "daily" in neuf[res]:
+            o["daily"] = neuf[res]["daily"]
+        for cle in ("posts", "reels", "stories"):
+            if cle in neuf[res]:
+                o[cle] = fusion_table(o.get(cle), neuf[res][cle])
+            else:
+                o.pop(cle, None)
+        for cle in ("audience", "hashtags"):
+            if cle in neuf[res]:
+                o[cle] = neuf[res][cle]
+        if "competitors" in neuf[res]:
+            note = (o.get("competitors") or {}).get("note")
+            o["competitors"] = neuf[res]["competitors"]
+            if note:
+                o["competitors"]["note"] = note
+    if "ads" in neuf:
+        a = out.setdefault("ads", {"analysis": A_REDIGER})
+        for plat in ("meta", "tiktok"):
+            if plat not in neuf["ads"]:
+                continue
+            p = a.setdefault(plat, {})
+            p["kpi"] = neuf["ads"][plat]["kpi"]
+            if "campaigns" in neuf["ads"][plat]:
+                p["campaigns"] = neuf["ads"][plat]["campaigns"]
+            if p.get("title") == "Lancement des campagnes":
+                p.pop("title")
+    changements = []
+
+    def val(x):
+        return x.get("v") if isinstance(x, dict) else x
+    for res in ("facebook", "instagram"):
+        avant, apres = (ancien.get(res) or {}).get("kpi") or {}, (out.get(res) or {}).get("kpi") or {}
+        for k in sorted(set(avant) | set(apres)):
+            if val(avant.get(k)) != val(apres.get(k)):
+                changements.append("%s.%s : %s -> %s" % (res, k, val(avant.get(k)), val(apres.get(k))))
+        for cle in ("posts", "reels", "stories"):
+            for r in ((out.get(res) or {}).get(cle) or {}).get("rows", []):
+                if r.pop("nouveau", False):
+                    changements.append("%s.%s : nouvelle publication du %s à titrer (%s)" % (res, cle, r.get("date"), r.get("url") or "sans lien"))
+    for res in ("facebook", "instagram"):
+        for cle in ("posts", "reels", "stories"):
+            vieux = {(r.get("url") or r.get("date")): r for r in (((ancien.get(res) or {}).get(cle) or {}).get("rows") or [])}
+            for r in (((out.get(res) or {}).get(cle) or {}).get("rows") or []):
+                v = vieux.get(r.get("url") or r.get("date"))
+                if not v:
+                    continue
+                for k, x in r.items():
+                    if isinstance(x, (int, float)) and v.get(k) != x:
+                        changements.append("%s.%s « %s » : %s %s -> %s" % (res, cle, r.get("title"), k, v.get(k), x))
+    for plat in ("meta", "tiktok"):
+        avant = ((ancien.get("ads") or {}).get(plat) or {}).get("kpi") or {}
+        apres = ((out.get("ads") or {}).get(plat) or {}).get("kpi") or {}
+        for k in sorted(set(avant) | set(apres)):
+            if val(avant.get(k)) != val(apres.get(k)):
+                changements.append("ads.%s.%s : %s -> %s" % (plat, k, val(avant.get(k)), val(apres.get(k))))
+    return out, changements
 
 
 def comparer(mois_obj):
@@ -524,6 +726,11 @@ def main():
     p.add_argument("--brut", required=True)
     p.add_argument("--sortie", required=True)
     p.add_argument("--jusqu-au", dest="jusqua")
+    u = sp.add_parser("actualiser")
+    u.add_argument("mois")
+    u.add_argument("--brut", required=True)
+    u.add_argument("--sortie", required=True)
+    u.add_argument("--jusqu-au", dest="jusqua")
     a = ap.parse_args()
     conf = config()["metricool"]
     if a.cmd == "requetes":
@@ -534,6 +741,13 @@ def main():
         return 0
     if a.jusqua:
         periode(a.mois, conf["fuseau"], a.jusqua)
+    if a.cmd == "actualiser":
+        mois, changements = actualiser(a.mois, Path(a.brut), a.jusqua)
+        Path(a.sortie).write_text(json.dumps(mois, ensure_ascii=False, indent=1), encoding="utf-8")
+        print("Mois %s actualisé dans %s" % (a.mois, a.sortie))
+        print("\n".join(["Changements à reprendre dans les textes :"] + ["  " + c for c in changements])
+              if changements else "Aucun chiffre n'a changé.")
+        return 0
     mois = preparer(a.mois, Path(a.brut), a.jusqua)
     Path(a.sortie).write_text(json.dumps(mois, ensure_ascii=False, indent=1), encoding="utf-8")
     print("Mois %s préparé dans %s" % (a.mois, a.sortie))

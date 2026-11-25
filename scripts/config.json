@@ -77,7 +77,8 @@
           "FBPO08",
           "FBPO14",
           "FBPO23",
-          "FBPO10"
+          "FBPO10",
+          "FBPO11"
         ]
       },
       "reels_facebook": {
@@ -233,6 +234,7 @@
     "concurrents": {
       "facebook": [],
       "instagram": []
-    }
+    },
+    "facebook_videos_sans_texte_en_reels": true
   }
 }

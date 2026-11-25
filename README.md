@@ -25,6 +25,14 @@ Toutes les commandes demandent le mot de passe dans la variable `FM_MOT_DE_PASSE
 5. `python3 scripts/donnees.py ajouter-mois mois.json` puis `python3 scripts/build.py` : le mois apparaît dans l'aperçu.
 6. Après validation : `python3 scripts/donnees.py publier AAAA-MM` puis `python3 scripts/build.py`.
 
+## Actualisation d'un mois déjà rédigé (mise à jour quotidienne)
+
+1. Exporter les mêmes requêtes Metricool jusqu'à la veille (`requetes AAAA-MM --jusqu-au AAAA-MM-JJ`).
+2. `python3 scripts/metricool.py actualiser AAAA-MM --brut DOSSIER --sortie mois.json --jusqu-au AAAA-MM-JJ` reprend les chiffres frais (organique, campagnes et installations), garde les titres et les textes déjà écrits et liste les changements.
+3. Mettre à jour dans `mois.json` les textes qui citent des chiffres, puis `donnees.py verifier`, `donnees.py ajouter-mois` et `build.py`.
+
+Sans date `--jusqu-au` (ou avec le dernier jour du mois), la mention « mois en cours » disparaît. Les vidéos Facebook sans légende que Metricool classe en posts sont comptées comme des reels (`facebook_videos_sans_texte_en_reels` dans `config.json`, vérifié dans Meta Business Suite).
+
 Pour un nouveau dépôt, `python3 scripts/donnees.py initialiser base.json` crée les données chiffrées à partir d'un fichier contenant l'auteur et l'historique des abonnés.
 
 Dépendance Python : `cryptography`.
