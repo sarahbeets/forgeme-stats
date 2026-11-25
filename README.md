@@ -33,6 +33,8 @@ Toutes les commandes demandent le mot de passe dans la variable `FM_MOT_DE_PASSE
 
 Sans date `--jusqu-au` (ou avec le dernier jour du mois), la mention « mois en cours » disparaît. Les vidéos Facebook sans légende que Metricool classe en posts sont comptées comme des reels (`facebook_videos_sans_texte_en_reels` dans `config.json`, vérifié dans Meta Business Suite).
 
+Le jour même, Metricool ne synchronise parfois qu'une partie des chiffres pub (le 25 novembre 2026, 238 impressions Meta pour 726 personnes touchées). `actualiser` affiche alors une alerte et les chiffres du jour sont relevés dans le Gestionnaire de publicités Meta et dans TikTok Ads Manager. Les noms de campagne affichés retirent « BROUILLON » et le montant en fin de nom, ou reprennent le nom choisi dans `noms_campagnes` (`config.json`).
+
 Pour un nouveau dépôt, `python3 scripts/donnees.py initialiser base.json` crée les données chiffrées à partir d'un fichier contenant l'auteur et l'historique des abonnés.
 
 Dépendance Python : `cryptography`.

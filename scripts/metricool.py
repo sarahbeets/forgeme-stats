@@ -25,6 +25,7 @@ Les chiffres relevés à la main dans les gestionnaires de publicités peuvent c
 import argparse
 import calendar
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -193,6 +194,17 @@ def serie_jour(lignes, met, cle):
     return out if len(out) >= 2 else None
 
 
+def nom_campagne(nom):
+    """Nom affiché d'une campagne : celui choisi dans config.json, sinon sans « BROUILLON » ni montant en fin de nom."""
+    nom = (nom or "").strip()
+    choix = config()["metricool"].get("noms_campagnes", {})
+    if nom in choix:
+        return choix[nom]
+    garde = [x.strip() for x in nom.split("/")]
+    garde = [x for x in garde if x.upper() != "BROUILLON" and not re.fullmatch(r"[\d\s.,]+\s*(EUR|€)", x, re.I)]
+    return " / ".join(garde) or nom
+
+
 def kpis_publicite(lignes, met):
     s, d = evolution(lignes, met)
 
@@ -212,6 +224,10 @@ def kpis_publicite(lignes, met):
     tiktok.update(couts(tiktok["impressions"] or 0, tiktok["clicks"] or 0, tiktok["spend"] or 0))
     if meta.get("impressions") and meta.get("reach"):
         meta["frequency"] = round(meta["impressions"] / meta["reach"], 2)
+    if meta.get("impressions") and ((meta.get("reach") or 0) > meta["impressions"] or (meta.get("ctr") or 0) > 10):
+        print("ATTENTION : chiffres Meta Ads incohérents dans Metricool (portée supérieure aux impressions ou CTR anormal), "
+              "synchronisation probablement partielle. Recouper avec le Gestionnaire de publicités avant de publier.",
+              file=sys.stderr)
     garder = lambda x: {a: b for a, b in x.items() if b is not None}  # noqa: E731
     meta, tiktok = garder(meta), garder(tiktok)
     return (meta if meta.get("impressions") else None, tiktok if tiktok.get("impressions") else None)
@@ -497,18 +513,18 @@ def preparer(mois, dossier: Path, jusqua=None):
                     return None
                 impr, clics, dep = r["impressions"], r.get("clicks") or 0, r.get("spend") or 0
                 res = r.get("results")
-                return {"name": (r["name"] or "").strip(), "impressions": entier(impr), "reach": entier(r.get("reach")),
-                        "frequency": arrondi(r.get("frequency")), "results": entier(res),
+                return {"name": nom_campagne(r["name"]), "impressions": entier(impr), "reach": entier(r.get("reach")),
+                        "frequency": round(impr / r["reach"], 2) if r.get("reach") else None, "results": entier(res),
                         "costPerResult": round(dep / res, 2) if res else None, "installs": entier(r.get("installs")),
                         "clicks": entier(clics), "cpm": round(dep / impr * 1000, 2), "spend": arrondi(dep)}
             t = table_posts(cm, ["name", "objective", "impressions", "reach", "spend", "clicks", "linkClicks", "installs",
-                                 "results", "resultLabel", "frequency", "thruPlays"], "impressions",
+                                 "results", "resultLabel", "thruPlays"], "impressions",
                             ["impressions", "reach", "frequency", "results", "costPerResult", "installs", "clicks", "cpm", "spend"], 6, tm)
             if t["rows"]:
                 sortie["ads"]["meta"]["campaigns"] = t
             totaux_campagnes(sortie["ads"]["meta"]["kpi"], cm,
                              ["name", "objective", "impressions", "reach", "spend", "clicks", "linkClicks", "installs",
-                              "results", "resultLabel", "frequency", "thruPlays"],
+                              "results", "resultLabel", "thruPlays"],
                              ("linkClicks", "installs", "results", "thruPlays"))
             simplifier_resultats(sortie["ads"]["meta"], objectif_app(cm, 1))
         ct = charger(dossier, "campagnes_tiktok", conf["campagnes_tiktok"]["metrics"])
@@ -518,7 +534,7 @@ def preparer(mois, dossier: Path, jusqua=None):
                     return None
                 impr, clics, dep = r["impressions"], r.get("clicks") or 0, r.get("spend") or 0
                 res = r.get("results")
-                return {"name": (r["name"] or "").strip(), "impressions": entier(impr), "clicks": entier(clics),
+                return {"name": nom_campagne(r["name"]), "impressions": entier(impr), "clicks": entier(clics),
                         "results": entier(res), "costPerResult": round(dep / res, 2) if res else None,
                         "cpc": round(dep / clics, 2) if clics else None, "ctr": round(clics / impr * 100, 2),
                         "spend": arrondi(dep)}

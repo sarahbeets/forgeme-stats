@@ -159,7 +159,6 @@
           "FACA79",
           "FACA156",
           "FACA157",
-          "FACA151",
           "FACA149"
         ]
       },
@@ -235,6 +234,10 @@
       "facebook": [],
       "instagram": []
     },
-    "facebook_videos_sans_texte_en_reels": true
+    "facebook_videos_sans_texte_en_reels": true,
+    "noms_campagnes": {
+      "ForgeMe / iOS / Installations / S1 Test 90 EUR / BROUILLON": "France / iOS / S1 Test 2 vidéos",
+      "ForgeMe / Android / Installations / 3 semaines 450 EUR / BROUILLON": "France / Android / S1 Test 2 vidéos"
+    }
   }
 }
