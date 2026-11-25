@@ -347,7 +347,7 @@ footer .mascotte{width:clamp(120px,17vw,200px);height:auto;filter:drop-shadow(0 
 </div>
 <div id="tip" role="status" hidden></div>
 
-<script id="payload" type="application/json">{"v": 1, "salt": "tEn+ipTtn0vb5W3A1iPxug==", "iter": 600000, "iv": "CK9faeKapcXGfKv3", "ct": "qr9imKvHa0E+/iViQKuRQBJGxJDkSiB3vuKtQQaH/3F+HxWJZa5qSUpudR9Bu5G300a2Nco1otQycZIjVHwUItBR1kIPxqHN9agGphJ0JPicZktVQ4GO1g+xZ1xRLGaKQfLBYddP4gCqXcRIZY+DxYBu8dU3KMY5OEIn6Qxf/A/oxl2o1qpVtu2NdBujD3ENs4ScwjTXDK9T9rdBIszlu3KxDTvbibJxAJ6wMZYTbyG0Vme14Hzqx+SqVhzmgg=="}</script>
+<script id="payload" type="application/json">{"v": 1, "salt": "tEn+ipTtn0vb5W3A1iPxug==", "iter": 600000, "iv": "nAQi65La+RdumK8T", "ct": "8E9OnampexnLVcfYIvBJafqZUrlaJfTjvqtWJ352g19vSBDA6+qniFAfyJ0JknPoFcSlHJ8xcFVJc3G2jSsbeg6L5tBe/Rx1mMZR28Y6Ru1iSip7vHvb+yn2DVsaDMjryLgDs4EEIk0RP0tmSAJ/ad+d3unsoxyTtdilOkJvhr0nK7j6OpJ7YTM4nGL53GfqdIjKfKyp6eRsj8K8IWImiqrRiLZt3p1zq7E0N/D1TWIYEEB0xBDFbLcExZPScw=="}</script>
 <script>
 (function(){
 "use strict";
@@ -553,7 +553,8 @@ var COLS={
   cpm:{l:"CPM*",f:euro},cpc:{l:"CPC*",f:euro},ctr:{l:"CTR*",f:function(v){return pct(v,2);}},spend:{l:"Dépensé",f:euro},conversions:{l:"Conversions",f:entier},
   results:{l:"Résultats",f:entier},costPerResult:{l:"Coût par résultat",f:euro},installs:{l:"Installations",f:entier},costPerInstall:{l:"Coût par installation",f:euro},
   frequency:{l:"Répétition*",f:function(v){return dec(v,2);}},videoViews:{l:"Lectures",f:compactOrInt},linkClicks:{l:"Clics sur le lien",f:entier},
-  views6s:{l:"Vues 6 s",f:entier},objective:{l:"Objectif",txt:1},resultLabel:{l:"Type de résultat",txt:1}
+  views6s:{l:"Vues 6 s",f:entier},objective:{l:"Objectif",txt:1},resultLabel:{l:"Type de résultat",txt:1},
+  budget:{l:"Budget",f:euro},periode:{l:"Période",txt:1},statut:{l:"Statut",txt:1}
 };
 function compactOrInt(v){return compact(v);}
 function tableCard(t,kind){
@@ -561,7 +562,7 @@ function tableCard(t,kind){
   var cols=t.columns.filter(function(c){return t.rows.some(function(r){return r[c]!=null;});});
   var isCamp=kind==="campagnes"||kind==="annonces";
   var max={};
-  cols.forEach(function(c){if(COLS[c]&&!COLS[c].txt&&!COLS[c].eng&&["cpm","cpc","ctr","spend","costPerResult","costPerInstall","frequency"].indexOf(c)<0){var mx=-Infinity;t.rows.forEach(function(r){if(r[c]!=null&&r[c]>mx)mx=r[c];});max[c]=mx;}});
+  cols.forEach(function(c){if(COLS[c]&&!COLS[c].txt&&!COLS[c].eng&&["cpm","cpc","ctr","spend","costPerResult","costPerInstall","frequency","budget"].indexOf(c)<0){var mx=-Infinity;t.rows.forEach(function(r){if(r[c]!=null&&r[c]>mx)mx=r[c];});max[c]=mx;}});
   var thead=h("tr",null,isCamp?h("th",{text:kind==="annonces"?"Publicité":"Campagne"}):[h("th",{text:"Date"}),h("th",{text:"Publication"})],
     cols.map(function(c){var spec=COLS[c]||{l:c};return h("th",{class:spec.txt?null:"num"},rich(spec.l));}));
   var body=t.rows.map(function(r){
@@ -938,14 +939,20 @@ function secInstagram(m,prevM){
 function pubPlateforme(sec,m,prevM,key,nom){
   var a=m.ads[key];if(!a)return;
   sec.appendChild(blockHead(nom,a.title||"Diffusion, résultats et coûts"));
+  var chiffres=0;
   [["impressions","reach","frequency","spend"],
    ["results","costPerResult","installs","costPerInstall","conversions","clicks","linkClicks"],
    ["cpm","cpc","ctr"],
-   ["videoViews","thruPlays","views6s","profileVisits","follows"]].forEach(function(keys,i){
-    var g=rowGrid(tiles(m,"ads",key,keys,prevM),i?"margin-top:14px":null);if(g)sec.appendChild(g);
+   ["videoViews","thruPlays","views6s","profileVisits","follows"]].forEach(function(keys){
+    var g=rowGrid(tiles(m,"ads",key,keys,prevM),chiffres?"margin-top:14px":null);if(g){sec.appendChild(g);chiffres++;}
   });
-  if(a.note)sec.appendChild(h("div",{style:"margin-top:14px"},noteCard(null,a.note)));
-  if(a.campaigns&&a.campaigns.rows&&a.campaigns.rows.length){sec.appendChild(blockHead(nom,"Les campagnes"));sec.appendChild(tableCard(a.campaigns,"campagnes"));}
+  if(a.note)sec.appendChild(h("div",{style:chiffres?"margin-top:14px":null},noteCard(null,a.note)));
+  if(a.campaigns&&a.campaigns.rows&&a.campaigns.rows.length){
+    var tc=tableCard(a.campaigns,"campagnes");
+    /* sans chiffres de diffusion (campagnes qui démarrent), le tableau suit directement la note */
+    if(chiffres){sec.appendChild(blockHead(nom,"Les campagnes"));}else{tc.style.marginTop="14px";}
+    sec.appendChild(tc);
+  }
   if(a.ads&&a.ads.rows&&a.ads.rows.length){sec.appendChild(blockHead(nom,"Les publicités"));sec.appendChild(tableCard(a.ads,"annonces"));}
 }
 function secPub(m,prevM){
