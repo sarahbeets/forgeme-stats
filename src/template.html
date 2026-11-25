@@ -265,6 +265,38 @@ details.data th,details.data td{padding:7px 10px}
 #tip .tk{width:12px;height:3px;border-radius:2px;display:inline-block}
 #tip .tl{opacity:.8}
 
+/* ----- Couleurs des réseaux (comme pour Atelier FB) ----- */
+.net-facebook{--net:#1877F2;--net-ink:#1468D8;--net-accent:#1877F2;--net-soft:#E8F1FE;--net-line:#C5DBFB;--net-hl:#166FE5;--net-bg:#166FE5}
+.net-instagram{--net:#C13584;--net-ink:#B12A79;--net-accent:#C13584;--net-soft:#FBEAF3;--net-line:#EFC9DD;--net-hl:linear-gradient(135deg,#8134AF 0%,#C13584 58%,#DD2A7B 100%);--net-bg:linear-gradient(110deg,#8134AF 0%,#C13584 45%,#DD2A7B 72%,#F58529 100%)}
+.net-meta{--net:#0866FF;--net-ink:#0A5BD6;--net-accent:#0866FF;--net-soft:#E6F0FF;--net-line:#B9D3FF;--net-hl:linear-gradient(120deg,#0064E0 0%,#0082FB 100%);--net-bg:linear-gradient(120deg,#0064E0 0%,#0082FB 100%)}
+.net-tiktok{--net:#FE2C55;--net-ink:#121212;--net-accent:#121212;--net-soft:#EAFBFB;--net-line:#BDEFEF;--net-hl:#121212;--net-bg:#121212}
+.theme .net-banner{background:var(--net-bg)}
+.theme .tag,.theme .kpi.hl{background:var(--net-hl)}
+.theme .kpi-value.accent,.theme .split .n{color:var(--net-accent)}
+.theme th,.theme td.eng,.theme .an h4,.theme .note-title,.theme .demo h4,.theme .demo li:first-child .dv,.theme details.data summary{color:var(--net-ink)}
+.theme .ast{color:var(--net)}
+.theme .kpi.hl .ast,.theme .net-banner .ast{color:rgba(255,255,255,.8)}
+.theme .kpi.hl .pill{color:var(--net-ink)}
+.theme .demo .bar{background:var(--net-soft)}
+.theme .demo .bar i{background:var(--net)}
+.theme .mk.r{background:var(--net-soft);color:var(--net-ink)}
+.theme td.title a{background-image:linear-gradient(var(--net-line),var(--net-line))}
+.theme td.title a:hover{color:var(--net-ink);background-image:linear-gradient(var(--net),var(--net))}
+.theme tr.self td{background:var(--net-soft)}
+.net-tiktok .tag{box-shadow:-2px -2px 0 #25F4EE,2px 2px 0 #FE2C55}
+.ov{background:linear-gradient(var(--net,var(--rose)),var(--net,var(--rose))) top/100% 4px no-repeat,var(--white)}
+.ov.ov-pub{background:linear-gradient(90deg,#0866FF 0 50%,#FE2C55 50% 100%) top/100% 4px no-repeat,var(--white)}
+.sec-pub>.net-banner{background:radial-gradient(40% 90% at 100% 0%,rgba(254,44,85,.42) 0%,rgba(254,44,85,0) 70%),radial-gradient(34% 80% at 90% 100%,rgba(37,244,238,.26) 0%,rgba(37,244,238,0) 70%),linear-gradient(110deg,#0064E0 0%,#0A50CC 40%,#111827 74%,#121212 100%)}
+.ndot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--net,var(--rose));margin-right:7px;vertical-align:0;flex:none}
+.ndot.duo{background:linear-gradient(90deg,#0866FF 50%,#FE2C55 50%)}
+.sm .net,.chart-head h4{display:flex;align-items:center}
+.nav a[data-sec="facebook"]::before,.nav a[data-sec="instagram"]::before,.nav a[data-sec="publicite"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px}
+.nav a[data-sec="publicite"]::before{background:linear-gradient(90deg,#0866FF 50%,#FE2C55 50%)}
+.nav a[data-sec="facebook"]::before{background:#1877F2}
+.nav a[data-sec="instagram"]::before{background:#C13584}
+.nav a[data-sec="facebook"][aria-current="true"]{background:#E8F1FE;color:#1468D8}
+.nav a[data-sec="instagram"][aria-current="true"]{background:#FBEAF3;color:#B12A79}
+
 /* ----- Pied de page ----- */
 footer{background:var(--grad);color:#fff;margin-top:40px;position:relative;overflow:hidden}
 footer::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.07);left:-140px;bottom:-220px}
@@ -533,6 +565,8 @@ function blockHead(tag,title){return h("div",{class:"block-head"},h("span",{clas
 function splitCard(m,net,prevM,title){
   var cat=CAT[net],section=m[net];
   var keys=["posts","reels","stories"].filter(function(k){return get(section,["kpi",k])!=null;});
+  var nonNuls=keys.filter(function(k){var o=norm(get(section,["kpi",k]));return o&&o.v;});
+  if(nonNuls.length)keys=nonNuls;
   if(!keys.length)return null;
   var wrap=h("div",{class:"split"});
   keys.forEach(function(k){
@@ -669,7 +703,10 @@ function tipRow(color,label,value){return h("div",{class:"tr"},color?h("i",{clas
 /* ================= Graphiques ================= */
 /* Les graphiques sont dessinés à la largeur réelle de leur carte (textes toujours à la bonne taille)
    et redessinés quand la fenêtre change de taille. */
-var COUL={rose:"#E31E50",past:"#F8C1CA",tiktok:"#1F9E8F",cross:"#EDB0BB"};
+var COUL={rose:"#E31E50",past:"#F8C1CA",cross:"#DCCFC9"};
+/* Couleur de chaque réseau dans les graphiques : [mois affiché, mois précédents] */
+var NETCOL={facebook:["#1877F2","#C5DBFB"],instagram:["#C13584","#EFC9DD"],meta:["#0866FF","#B9D3FF"],tiktok:["#FE2C55","#FFC2CE"]};
+function ndot(net){return h("i",{class:"ndot"+(net==="pub"?" duo":""),"aria-hidden":"true"});}
 var CHARTS=[];
 function chartBox(draw){var box=h("div",{class:"chart"});CHARTS.push({box:box,draw:draw,w:0});return box;}
 function drawCharts(force){
@@ -748,7 +785,7 @@ function columnChart(points,opts){
     svg.appendChild(s("line",{class:"grid-l",x1:pl,x2:W-pr,y1:H-pb,y2:H-pb}));
     points.forEach(function(p,i){
       var cx=pl+band*i+band/2,x=cx-bw/2,y=Y(p.v),hgt=Math.max(H-pb-y,1),cur=p.id===opts.cur,r=Math.min(4,bw/2,hgt);
-      svg.appendChild(s("path",{d:"M"+x+" "+(H-pb)+" V"+(y+r)+" Q"+x+" "+y+" "+(x+r)+" "+y+" H"+(x+bw-r)+" Q"+(x+bw)+" "+y+" "+(x+bw)+" "+(y+r)+" V"+(H-pb)+" Z",fill:cur?COUL.rose:COUL.past}));
+      svg.appendChild(s("path",{d:"M"+x+" "+(H-pb)+" V"+(y+r)+" Q"+x+" "+y+" "+(x+r)+" "+y+" H"+(x+bw-r)+" Q"+(x+bw)+" "+y+" "+(x+bw)+" "+(y+r)+" V"+(H-pb)+" Z",fill:cur?(opts.color||COUL.rose):(opts.past||COUL.past)}));
       svg.appendChild(s("text",{class:"vlab",x:cx,y:y-7,"text-anchor":"middle"},opts.fmt(p.v)));
       svg.appendChild(s("text",{class:"axis"+(cur?" cur":""),x:cx,y:H-8,"text-anchor":"middle"},courtMois(p.id)));
       var hit=s("rect",{class:"hit",x:pl+band*i,y:0,width:band,height:H-pb,tabindex:"0","aria-label":libMois(p.id)+" : "+opts.full(p.v)});
@@ -787,12 +824,13 @@ function seriesUpTo(m,getter,limit){
   for(var j=Math.max(0,i-(limit||6)+1);j<=i;j++){var v=getter(MONTHS[j]);if(v!=null)out.push({id:MONTHS[j].id,v:v});}
   return out;
 }
-function trendCard(m,title,getter,fmt,full){
+function trendCard(m,title,getter,fmt,full,net){
   var pts=seriesUpTo(m,getter,6);
   if(pts.length<2)return null;
-  return h("div",{class:"card"},
-    h("div",{class:"chart-head"},h("h4",null,rich(title)),h("span",{class:"hint",text:pts.length+" derniers mois"})),
-    columnChart(pts,{cur:m.id,fmt:fmt,full:full,aria:title.replace(/\*/g,"")+" : "+pts.map(function(p){return libMois(p.id)+" "+full(p.v);}).join(", ")}),
+  var col=NETCOL[net]||[COUL.rose,COUL.past];
+  return h("div",{class:"card theme net-"+net},
+    h("div",{class:"chart-head"},h("h4",null,ndot(net),h("span",null,rich(title))),h("span",{class:"hint",text:pts.length+" derniers mois"})),
+    columnChart(pts,{cur:m.id,fmt:fmt,full:full,color:col[0],past:col[1],aria:title.replace(/\*/g,"")+" : "+pts.map(function(p){return libMois(p.id)+" "+full(p.v);}).join(", ")}),
     dataTable(["Mois","Valeur"],pts.map(function(p){return [libMois(p.id),full(p.v)];})));
 }
 function budgetCard(m){
@@ -800,8 +838,8 @@ function budgetCard(m){
   if(pts.length<2)return null;
   return h("div",{class:"card"},
     h("div",{class:"chart-head"},h("h4",{text:"Budget publicitaire"}),h("span",{class:"hint",text:pts.length+" derniers mois"})),
-    h("div",{class:"legend"},h("span",null,h("i",{style:"background:"+COUL.rose}),"Meta Ads"),h("span",null,h("i",{style:"background:"+COUL.tiktok}),"TikTok Ads")),
-    stackChart(pts,{cur:m.id,ca:COUL.rose,cb:COUL.tiktok,la:"Meta Ads",lb:"TikTok Ads",aria:"Budget publicitaire par mois : "+pts.map(function(p){return libMois(p.id)+" "+euro(p.a+p.b);}).join(", ")}),
+    h("div",{class:"legend"},h("span",null,h("i",{style:"background:"+NETCOL.meta[0]}),"Meta Ads"),h("span",null,h("i",{style:"background:"+NETCOL.tiktok[0]}),"TikTok Ads")),
+    stackChart(pts,{cur:m.id,ca:NETCOL.meta[0],cb:NETCOL.tiktok[0],la:"Meta Ads",lb:"TikTok Ads",aria:"Budget publicitaire par mois : "+pts.map(function(p){return libMois(p.id)+" "+euro(p.a+p.b);}).join(", ")}),
     dataTable(["Mois","Meta Ads","TikTok Ads","Total"],pts.map(function(p){return [libMois(p.id),euro(p.a),euro(p.b),euro(p.a+p.b)];})));
 }
 function kv(sec,key){var o=norm(sec&&sec.kpi?sec.kpi[key]:null);return o?o.v:null;}
@@ -819,7 +857,7 @@ function secVueEnsemble(m,prevM){
     var kd=kpiData(m,net,null,"followers",CAT[net].followers,prevM);if(!kd)return;
     var ov=m.overview&&m.overview[net]||{};
     var pill=ov.pill||(kd.pill?{t:kd.pill.t.split(" · ").pop(),c:kd.pill.c}:null);
-    var c=h("div",{class:"card kpi"},h("div",{class:"kpi-label",text:n[1]+" · abonnés"}),h("div",{class:"kpi-value",text:entier(kd.v)}),
+    var c=h("div",{class:"card kpi ov theme net-"+net},h("div",{class:"kpi-label"},ndot(net),n[1]+" · abonnés"),h("div",{class:"kpi-value",text:entier(kd.v)}),
       pill?h("div",{class:"kpi-foot"},pillEl(pill)):null,ov.note?h("div",{class:"kpi-sub"},rich(ov.note)):null);
     cards.push(c);
   });
@@ -827,12 +865,12 @@ function secVueEnsemble(m,prevM){
     var a=kv(m.ads.meta,"spend")||0,b=kv(m.ads.tiktok,"spend")||0;
     var ov=m.overview&&m.overview.ads||{};var pill=ov.pill;
     if(!pill&&prevM&&prevM.ads&&m.autoPills!==false){var pa=(kv(prevM.ads.meta,"spend")||0)+(kv(prevM.ads.tiktok,"spend")||0);pill=autoPill({pol:0},a+b,pa);}
-    cards.push(h("div",{class:"card kpi"},h("div",{class:"kpi-label",text:"Publicité · dépensé"}),h("div",{class:"kpi-value",text:euro(a+b)}),
+    cards.push(h("div",{class:"card kpi ov ov-pub"},h("div",{class:"kpi-label"},ndot("pub"),"Publicité · dépensé"),h("div",{class:"kpi-value",text:euro(a+b)}),
       pill?h("div",{class:"kpi-foot"},pillEl(pill)):null,ov.note?h("div",{class:"kpi-sub"},rich(ov.note)):null));
     var ia=kv(m.ads.meta,"installs"),ib=kv(m.ads.tiktok,"installs");
     if(ia!=null||ib!=null){
       var ovi=m.overview&&m.overview.installs||{};
-      cards.push(h("div",{class:"card kpi"},h("div",{class:"kpi-label",text:"Publicité · installations de l'app"}),h("div",{class:"kpi-value accent",text:entier((ia||0)+(ib||0))}),
+      cards.push(h("div",{class:"card kpi ov ov-pub"},h("div",{class:"kpi-label"},ndot("pub"),"Publicité · installations de l'app"),h("div",{class:"kpi-value accent",text:entier((ia||0)+(ib||0))}),
         ovi.pill?h("div",{class:"kpi-foot"},pillEl(ovi.pill)):null,ovi.note?h("div",{class:"kpi-sub"},rich(ovi.note)):null));
     }
   }
@@ -848,19 +886,19 @@ function secVueEnsemble(m,prevM){
     if(daily){
       var pts=dailyPoints(m,n[0]);if(!pts)return;
       var g=pts[pts.length-1].v-pts[0].v;
-      card=h("div",{class:"card"},
-        h("div",{class:"top"},h("div",null,h("div",{class:"net",text:n[1]}),h("div",{class:"big",text:entier(pts[pts.length-1].v)})),
+      card=h("div",{class:"card theme net-"+n[0]},
+        h("div",{class:"top"},h("div",null,h("div",{class:"net"},ndot(n[0]),n[1]),h("div",{class:"big",text:entier(pts[pts.length-1].v)})),
           h("div",{class:"grow "+(g>0?"good":g<0?"bad":""),text:signe(g,entier)+" depuis le "+dateCourte(pts[0].id)})),
-        lineChart(pts,{color:COUL.rose,unit:"abonnés",labW:70,lab:function(p){return dateCourte(p.id);},tipLab:function(p){return "Le "+dateLongue(p.id);},ariaLab:function(p){return dateLongue(p.id);},
+        lineChart(pts,{color:NETCOL[n[0]][0],unit:"abonnés",labW:70,lab:function(p){return dateCourte(p.id);},tipLab:function(p){return "Le "+dateLongue(p.id);},ariaLab:function(p){return dateLongue(p.id);},
           aria:"Abonnés "+n[1]+" jour par jour : "+pts.map(function(p){return dateCourte(p.id)+" "+entier(p.v);}).join(", ")}),
         dataTable(["Jour","Abonnés"],pts.map(function(p){return [dateLongue(p.id),entier(p.v)];})));
     }else{
       var pm=monthEndPoints(n[0],ids);if(pm.length<2)return;
       var gm=pm[pm.length-1].v-pm[0].v,nm=pm.length-1;
-      card=h("div",{class:"card"},
-        h("div",{class:"top"},h("div",null,h("div",{class:"net",text:n[1]}),h("div",{class:"big",text:entier(pm[pm.length-1].v)})),
+      card=h("div",{class:"card theme net-"+n[0]},
+        h("div",{class:"top"},h("div",null,h("div",{class:"net"},ndot(n[0]),n[1]),h("div",{class:"big",text:entier(pm[pm.length-1].v)})),
           h("div",{class:"grow "+(gm>0?"good":gm<0?"bad":""),text:signe(gm,entier)+" en "+nm+" mois"})),
-        lineChart(pm,{color:COUL.rose,unit:"abonnés",aria:"Abonnés "+n[1]+" : "+pm.map(function(p){return libMois(p.id)+" "+entier(p.v);}).join(", ")}),
+        lineChart(pm,{color:NETCOL[n[0]][0],unit:"abonnés",aria:"Abonnés "+n[1]+" : "+pm.map(function(p){return libMois(p.id)+" "+entier(p.v);}).join(", ")}),
         dataTable(["Fin de mois","Abonnés"],pm.map(function(p){return [libMois(p.id),entier(p.v)];})));
     }
     sm.appendChild(card);
@@ -868,8 +906,8 @@ function secVueEnsemble(m,prevM){
   if(sm.children.length)sec.appendChild(h("div",{class:"block"},h("div",{class:"block-head"},h("span",{class:"tag",text:"Communautés"}),
     h("h3",{text:daily?"Les abonnés jour par jour en "+nomMois(m.id):"Évolution des abonnés, fin de mois"})),sm));
   var trends=[
-    trendCard(m,"Facebook · vues* de contenu",function(x){return kv(x.facebook,"views");},compact,function(v){return entier(v)+" vues";}),
-    trendCard(m,"Instagram · vues*",function(x){return kv(x.instagram,"views");},compact,function(v){return entier(v)+" vues";}),
+    trendCard(m,"Facebook · vues* de contenu",function(x){return kv(x.facebook,"views");},compact,function(v){return entier(v)+" vues";},"facebook"),
+    trendCard(m,"Instagram · vues*",function(x){return kv(x.instagram,"views");},compact,function(v){return entier(v)+" vues";},"instagram"),
     budgetCard(m)
   ].filter(Boolean);
   if(trends.length)sec.appendChild(h("div",{class:"block"},h("div",{class:"block-head"},h("span",{class:"tag",text:"Tendances"}),h("h3",{text:"Visibilité et budget, mois par mois"})),h("div",{class:"grid g2"},trends)));
@@ -880,7 +918,7 @@ function rowGrid(cards,style){return cards.length?grid(cards,null,style||"margin
 
 function secFacebook(m,prevM){
   var f=m.facebook;if(!f)return null;var C=CAT.facebook;
-  var sec=h("section",{class:"sec",id:"facebook"},banner(m,"Facebook"));
+  var sec=h("section",{class:"sec theme net-facebook",id:"facebook"},banner(m,"Facebook"));
   sec.appendChild(blockHead("Facebook","Communauté et visibilité"));
   sec.appendChild(grid(tiles(m,"facebook",null,["followers","contents","views","pageVisits","followersGained","followersLost"],prevM)));
   var row=[];var sp=splitCard(m,"facebook",prevM);if(sp)row.push(sp);
@@ -906,7 +944,7 @@ function secFacebook(m,prevM){
 }
 function secInstagram(m,prevM){
   var g=m.instagram;if(!g)return null;var C=CAT.instagram;
-  var sec=h("section",{class:"sec",id:"instagram"},banner(m,"Instagram"));
+  var sec=h("section",{class:"sec theme net-instagram",id:"instagram"},banner(m,"Instagram"));
   sec.appendChild(blockHead("Instagram","Croissance de la communauté"));
   sec.appendChild(grid(tiles(m,"instagram",null,["followers","netFollowers","followersGained","followersLost","contents"],prevM,{hl:"followers"})));
   audienceBlocks("Instagram",g.audience).forEach(function(el){sec.appendChild(el);});
@@ -935,8 +973,9 @@ function secInstagram(m,prevM){
   if(g.analysis){sec.appendChild(blockHead("Instagram","Analyses et recommandations"));sec.appendChild(analysis(g.analysis));}
   return sec;
 }
-function pubPlateforme(sec,m,prevM,key,nom){
+function pubPlateforme(parent,m,prevM,key,nom){
   var a=m.ads[key];if(!a)return;
+  var sec=h("div",{class:"theme net-"+key});parent.appendChild(sec);
   sec.appendChild(blockHead(nom,a.title||"Diffusion, résultats et coûts"));
   var chiffres=0;
   [["impressions","reach","frequency","spend"],
@@ -957,7 +996,7 @@ function pubPlateforme(sec,m,prevM,key,nom){
 function secPub(m,prevM){
   var a=m.ads;if(!a)return null;
   var noms=[a.meta?"Meta Ads":null,a.tiktok?"TikTok Ads":null].filter(Boolean).join(" et ");
-  var sec=h("section",{class:"sec",id:"publicite"},banner(m,"Publicité",a.sub||noms));
+  var sec=h("section",{class:"sec sec-pub",id:"publicite"},banner(m,"Publicité",a.sub||noms));
   pubPlateforme(sec,m,prevM,"meta","Meta Ads");
   pubPlateforme(sec,m,prevM,"tiktok","TikTok Ads");
   if(a.analysis){sec.appendChild(blockHead("Publicité","Analyses et recommandations"));sec.appendChild(analysis(a.analysis));}
