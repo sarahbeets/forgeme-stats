@@ -526,6 +526,13 @@ def preparer(mois, dossier: Path, jusqua=None):
                              ["name", "objective", "impressions", "reach", "spend", "clicks", "linkClicks", "installs",
                               "results", "resultLabel", "thruPlays"],
                              ("linkClicks", "installs", "results", "thruPlays"))
+            km = sortie["ads"]["meta"]["kpi"]
+            somme = sum(r.get("spend") or 0 for r in t["rows"])
+            if km.get("spend") and abs(somme - km["spend"]) > max(0.5, km["spend"] * 0.01):
+                print("ATTENTION : dépense Meta du compte (%.2f €) différente de la somme des campagnes (%.2f €), "
+                      "synchronisation Metricool décalée entre les deux niveaux." % (km["spend"], somme), file=sys.stderr)
+            if (km.get("linkClicks") or 0) > (km.get("clicks") or 0):
+                print("ATTENTION : plus de clics sur le lien que de clics dans Metricool, clics Meta à vérifier.", file=sys.stderr)
             simplifier_resultats(sortie["ads"]["meta"], objectif_app(cm, 1))
         ct = charger(dossier, "campagnes_tiktok", conf["campagnes_tiktok"]["metrics"])
         if ct and tiktok:
