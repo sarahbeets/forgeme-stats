@@ -532,7 +532,13 @@ def preparer(mois, dossier: Path, jusqua=None):
                 print("ATTENTION : dépense Meta du compte (%.2f €) différente de la somme des campagnes (%.2f €), "
                       "synchronisation Metricool décalée entre les deux niveaux." % (km["spend"], somme), file=sys.stderr)
             if (km.get("linkClicks") or 0) > (km.get("clicks") or 0):
-                print("ATTENTION : plus de clics sur le lien que de clics dans Metricool, clics Meta à vérifier.", file=sys.stderr)
+                print("ATTENTION : plus de clics sur le lien que de clics dans Metricool, clics Meta écartés de la page.", file=sys.stderr)
+                for cle in ("clicks", "linkClicks", "ctr", "cpc"):
+                    km.pop(cle, None)
+                if t["rows"]:
+                    t["columns"] = [x for x in t["columns"] if x != "clicks"]
+                    for r in t["rows"]:
+                        r.pop("clicks", None)
             simplifier_resultats(sortie["ads"]["meta"], objectif_app(cm, 1))
         ct = charger(dossier, "campagnes_tiktok", conf["campagnes_tiktok"]["metrics"])
         if ct and tiktok:
@@ -542,7 +548,7 @@ def preparer(mois, dossier: Path, jusqua=None):
                 impr, clics, dep = r["impressions"], r.get("clicks") or 0, r.get("spend") or 0
                 res = r.get("results")
                 return {"name": nom_campagne(r["name"]), "impressions": entier(impr), "clicks": entier(clics),
-                        "results": entier(res), "costPerResult": round(dep / res, 2) if res else None,
+                        "conversions": entier(r.get("conversions")), "results": entier(res), "costPerResult": round(dep / res, 2) if res else None,
                         "cpc": round(dep / clics, 2) if clics else None, "ctr": round(clics / impr * 100, 2),
                         "spend": arrondi(dep)}
             t = table_posts(ct, ["name", "objective", "impressions", "clicks", "conversions", "spend", "results", "frequency",
@@ -555,6 +561,7 @@ def preparer(mois, dossier: Path, jusqua=None):
                               "videoViews", "views6s", "profileVisits", "follows"],
                              ("results", "videoViews", "views6s", "profileVisits", "follows"))
             simplifier_resultats(sortie["ads"]["tiktok"], objectif_app(ct, 1))
+            installations_tiktok(sortie["ads"]["tiktok"], objectif_app(ct, 1))
 
     blocs_complementaires(dossier, sortie)
     sortie["takeaways"] = {"wins": [A_REDIGER], "priorities": [A_REDIGER]}
@@ -609,6 +616,29 @@ def simplifier_resultats(plat, app):
                     r["costPerInstall"] = round(r["spend"] / r["installs"], 2)
             cols = [c for c in camp["columns"] if c not in ("results", "costPerResult", "installs", "costPerInstall")]
             camp["columns"] = cols[:-1] + ["installs", "costPerInstall"] + cols[-1:]
+
+
+def installations_tiktok(plat, app):
+    """Campagnes TikTok d'installation : les conversions sont les installations de l'application."""
+    k = plat.get("kpi") or {}
+    camp = plat.get("campaigns")
+    if camp:
+        for r in camp["rows"]:
+            conv = r.pop("conversions", None)
+            if app and r.get("results") is None:
+                r.pop("results", None)
+                r.pop("costPerResult", None)
+                r["installs"] = conv
+                if conv and r.get("spend") is not None:
+                    r["costPerInstall"] = round(r["spend"] / conv, 2)
+    if not app or k.get("installs") is not None or k.get("conversions") is None:
+        return
+    k["installs"] = k.pop("conversions")
+    if k["installs"] and k.get("spend") is not None:
+        k["costPerInstall"] = round(k["spend"] / k["installs"], 2)
+    if camp and all("installs" in r for r in camp["rows"]):
+        cols = [x for x in camp["columns"] if x not in ("results", "costPerResult")]
+        camp["columns"] = cols[:-1] + ["installs", "costPerInstall"] + cols[-1:]
 
 
 def fusion_table(ancienne, nouvelle):
