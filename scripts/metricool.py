@@ -494,8 +494,12 @@ def preparer(mois, dossier: Path, jusqua=None):
                         "impressions": entier(r["impressions"]), "reach": entier(r["reach"])}
             t = table_posts(stories, ["date", "texte", "url", "type", "impressions", "reach", "replies", "tapsForward", "exits"],
                             "reach", ["reach", "impressions"], 8, ts)
-            if t["rows"]:
+            if t["rows"] and any((r.get("reach") or 0) or (r.get("impressions") or 0) for r in t["rows"]):
                 sortie["instagram"]["stories"] = t
+            elif t["rows"]:
+                sortie["instagram"].get("kpi", {}).pop("avgReachPerStory", None)
+                print("Stories Instagram sans portée ni impressions dans Metricool, tableau des stories laissé de côté.",
+                      file=sys.stderr)
 
     pub = charger(dossier, "publicite", conf["publicite"]["metrics"])
     if pub:
@@ -531,6 +535,17 @@ def preparer(mois, dossier: Path, jusqua=None):
             if km.get("spend") and abs(somme - km["spend"]) > max(0.5, km["spend"] * 0.01):
                 print("ATTENTION : dépense Meta du compte (%.2f €) différente de la somme des campagnes (%.2f €), "
                       "synchronisation Metricool décalée entre les deux niveaux." % (km["spend"], somme), file=sys.stderr)
+                if t["rows"] and len(t["rows"]) == len(cm):
+                    imp = sum(r.get("impressions") or 0 for r in t["rows"])
+                    km["impressions"], km["spend"] = imp, round(somme, 2)
+                    if imp:
+                        km["cpm"] = round(km["spend"] / imp * 1000, 2)
+                        if km.get("reach"):
+                            km["frequency"] = round(imp / km["reach"], 2)
+                    for cle, base in (("costPerInstall", "installs"), ("costPerResult", "results")):
+                        if km.get(base):
+                            km[cle] = round(km["spend"] / km[base], 2)
+                    print("  Cartes Meta alignées sur la somme des campagnes pour coller au tableau.", file=sys.stderr)
             if (km.get("linkClicks") or 0) > (km.get("clicks") or 0):
                 print("ATTENTION : plus de clics sur le lien que de clics dans Metricool, clics Meta écartés de la page.", file=sys.stderr)
                 for cle in ("clicks", "linkClicks", "ctr", "cpc"):
